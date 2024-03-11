@@ -37,3 +37,34 @@ type Diamond struct {
 		StateMutability string `json:"stateMutability,omitempty"`
 	} `json:"diamondAbi"`
 }
+
+type Chain struct {
+	ID             int    `json:"id"`
+	Name           string `json:"name"`
+	Network        string `json:"network"`
+	NativeCurrency struct {
+		Name     string `json:"name"`
+		Symbol   string `json:"symbol"`
+		Decimals int    `json:"decimals"`
+	} `json:"nativeCurrency"`
+	RPCUrls struct {
+		Public struct {
+			HTTP      []string `json:"http"`
+			WebSocket []string `json:"webSocket"`
+		} `json:"public"`
+		Default struct {
+			HTTP      []string `json:"http"`
+			WebSocket []string `json:"webSocket"`
+		} `json:"default"`
+	} `json:"rpcUrls"`
+	BlockExplorers struct {
+		Default struct {
+			Name   string `json:"name"`
+			URL    string `json:"url"`
+			APIURL string `json:"apiUrl"`
+		} `json:"default"`
+	} `json:"blockExplorers"`
+	Testnet bool `json:"testnet"`
+}
+
+type Chains map[string]Chain
