@@ -26,12 +26,6 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, _ []string) {
-		if address == "" {
-			fmt.Println(components.ErrorBox("Address is required"))
-			cmd.Help()
-			return
-		}
-
 		var resp *http.Response
 		var err error
 		var jsonData types.Diamond
@@ -72,4 +66,5 @@ func init() {
 	// inspectCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	inspectCmd.Flags().StringVarP(&network, "network", "n", "mainnet", "The network the diamond contract is deployed to")
 	inspectCmd.Flags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to inspect")
+	inspectCmd.MarkFlagRequired("address")
 }
