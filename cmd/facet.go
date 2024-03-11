@@ -52,6 +52,7 @@ func init() {
 	// facetCmd.PersistentFlags().String("foo", "", "A help for foo")
 	inspectCmd.PersistentFlags().StringVarP(&network, "network", "n", "mainnet", "The network the diamond contract is deployed to")
 	inspectCmd.PersistentFlags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to inspect")
+	inspectCmd.MarkPersistentFlagRequired("address")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
