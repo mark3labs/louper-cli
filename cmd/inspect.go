@@ -10,46 +10,10 @@ import (
 	"net/http"
 
 	"github.com/charmbracelet/huh/spinner"
+	"github.com/mark3labs/louper-cli/components"
+	"github.com/mark3labs/louper-cli/types"
 	"github.com/spf13/cobra"
 )
-
-type Diamond struct {
-	Chain   string `json:"chain"`
-	Diamond struct {
-		Name string `json:"name"`
-		Abi  []struct {
-			Inputs []struct {
-				InternalType string `json:"internalType"`
-				Name         string `json:"name"`
-				Type         string `json:"type"`
-			} `json:"inputs,omitempty"`
-			StateMutability string `json:"stateMutability,omitempty"`
-			Type            string `json:"type"`
-			Name            string `json:"name,omitempty"`
-		} `json:"abi"`
-		Address string `json:"address"`
-		Facets  []struct {
-			Name string `json:"name"`
-			Abi  []struct {
-				Inputs          []any  `json:"inputs"`
-				Name            string `json:"name"`
-				Type            string `json:"type"`
-				Anonymous       bool   `json:"anonymous,omitempty"`
-				Outputs         []any  `json:"outputs,omitempty"`
-				StateMutability string `json:"stateMutability,omitempty"`
-			} `json:"abi"`
-			Address string `json:"address"`
-		} `json:"facets"`
-	} `json:"diamond"`
-	DiamondAbi []struct {
-		Inputs          []any  `json:"inputs,omitempty"`
-		Name            string `json:"name,omitempty"`
-		Type            string `json:"type"`
-		Anonymous       bool   `json:"anonymous,omitempty"`
-		Outputs         []any  `json:"outputs,omitempty"`
-		StateMutability string `json:"stateMutability,omitempty"`
-	} `json:"diamondAbi"`
-}
 
 // inspectCmd represents the inspect command
 var inspectCmd = &cobra.Command{
@@ -61,23 +25,16 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		network, err := cmd.Flags().GetString("network")
-		if err != nil {
-			fmt.Println("Error getting network flag")
-		}
-		address, err := cmd.Flags().GetString("address")
-		if err != nil {
-			fmt.Println("Error getting address flag")
-		}
-
+	Run: func(cmd *cobra.Command, _ []string) {
 		if address == "" {
-			fmt.Println("Error: --address flag is required")
+			fmt.Println(components.ErrorBox("Address is required"))
+			cmd.Help()
 			return
 		}
 
 		var resp *http.Response
-		var jsonData Diamond
+		var err error
+		var jsonData types.Diamond
 		spinner.New().Title("Fetching Diamond Details...").Action(func() {
 			// Fetch JSON from https://louper.dev/diamond/{address}/json?network={network}
 			resp, err = http.Get("https://louper.dev/diamond/" + address + "/json?network=" + network)
@@ -90,14 +47,14 @@ to quickly create a Cobra application.`,
 			json.Unmarshal(rawBody, &jsonData)
 		}).Run()
 
-		fmt.Println("Diamond Name: ", jsonData.Diamond.Name)
-		fmt.Println("Diamond Address: ", jsonData.Diamond.Address)
+		fmt.Println(components.Table("Diamond Name", "Diamond Address").Row(jsonData.Diamond.Name, jsonData.Diamond.Address))
 
+		facetsTable := components.Table("Facet Name", "Facet Address")
 		for _, facet := range jsonData.Diamond.Facets {
-			fmt.Println("-----------------")
-			fmt.Println("Facet Name: ", facet.Name)
-			fmt.Println("Facet Address: ", facet.Address)
+			facetsTable.Row(facet.Name, facet.Address)
 		}
+
+		fmt.Println(facetsTable)
 	},
 }
 
@@ -113,6 +70,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// inspectCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	inspectCmd.Flags().StringP("network", "n", "mainnet", "The network the diamond contract is deployed to")
-	inspectCmd.Flags().StringP("address", "a", "", "The address of the diamond contract to inspect")
+	inspectCmd.Flags().StringVarP(&network, "network", "n", "mainnet", "The network the diamond contract is deployed to")
+	inspectCmd.Flags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to inspect")
 }
