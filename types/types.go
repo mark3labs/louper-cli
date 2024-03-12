@@ -5,48 +5,49 @@ type Diamond struct {
 	Diamond struct {
 		Name string `json:"name"`
 		Abi  []struct {
-			Inputs []struct {
+			StateMutability string `json:"stateMutability,omitempty"`
+			Type            string `json:"type"`
+			Name            string `json:"name,omitempty"`
+			Inputs          []struct {
 				InternalType string `json:"internalType"`
 				Name         string `json:"name"`
 				Type         string `json:"type"`
 			} `json:"inputs,omitempty"`
-			StateMutability string `json:"stateMutability,omitempty"`
-			Type            string `json:"type"`
-			Name            string `json:"name,omitempty"`
 		} `json:"abi"`
 		Address string `json:"address"`
 		Facets  []struct {
-			Name string `json:"name"`
-			Abi  []struct {
-				Inputs          []any  `json:"inputs"`
+			Name    string `json:"name"`
+			Address string `json:"address"`
+			Abi     []struct {
 				Name            string `json:"name"`
 				Type            string `json:"type"`
-				Anonymous       bool   `json:"anonymous,omitempty"`
-				Outputs         []any  `json:"outputs,omitempty"`
 				StateMutability string `json:"stateMutability,omitempty"`
+				Inputs          []any  `json:"inputs"`
+				Outputs         []any  `json:"outputs,omitempty"`
+				Anonymous       bool   `json:"anonymous,omitempty"`
 			} `json:"abi"`
-			Address string `json:"address"`
 		} `json:"facets"`
 	} `json:"diamond"`
 	DiamondAbi []struct {
-		Inputs          []any  `json:"inputs,omitempty"`
 		Name            string `json:"name,omitempty"`
 		Type            string `json:"type"`
-		Anonymous       bool   `json:"anonymous,omitempty"`
-		Outputs         []any  `json:"outputs,omitempty"`
 		StateMutability string `json:"stateMutability,omitempty"`
+		Inputs          []any  `json:"inputs,omitempty"`
+		Outputs         []any  `json:"outputs,omitempty"`
+		Anonymous       bool   `json:"anonymous,omitempty"`
 	} `json:"diamondAbi"`
 }
 
 type Chain struct {
-	ID             int    `json:"id"`
-	Name           string `json:"name"`
-	Network        string `json:"network"`
-	NativeCurrency struct {
-		Name     string `json:"name"`
-		Symbol   string `json:"symbol"`
-		Decimals int    `json:"decimals"`
-	} `json:"nativeCurrency"`
+	BlockExplorers struct {
+		Default struct {
+			Name   string `json:"name"`
+			URL    string `json:"url"`
+			APIURL string `json:"apiUrl"`
+		} `json:"default"`
+	} `json:"blockExplorers"`
+	Name    string `json:"name"`
+	Network string `json:"network"`
 	RPCUrls struct {
 		Public struct {
 			HTTP      []string `json:"http"`
@@ -57,14 +58,25 @@ type Chain struct {
 			WebSocket []string `json:"webSocket"`
 		} `json:"default"`
 	} `json:"rpcUrls"`
-	BlockExplorers struct {
-		Default struct {
-			Name   string `json:"name"`
-			URL    string `json:"url"`
-			APIURL string `json:"apiUrl"`
-		} `json:"default"`
-	} `json:"blockExplorers"`
+	NativeCurrency struct {
+		Name     string `json:"name"`
+		Symbol   string `json:"symbol"`
+		Decimals int    `json:"decimals"`
+	} `json:"nativeCurrency"`
+	ID      int  `json:"id"`
 	Testnet bool `json:"testnet"`
 }
 
 type Chains map[string]Chain
+
+type AbiResponse struct {
+	Name string `json:"name"`
+	Abi  []struct {
+		Name            string        `json:"name"`
+		Type            string        `json:"type"`
+		StateMutability string        `json:"stateMutability,omitempty"`
+		Inputs          []interface{} `json:"inputs"`
+		Outputs         []interface{} `json:"outputs,omitempty"`
+		Anonymous       bool          `json:"anonymous,omitempty"`
+	} `json:"abi"`
+}

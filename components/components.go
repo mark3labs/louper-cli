@@ -20,7 +20,7 @@ func Table(headers ...string) *table.Table {
 		// HeaderStyle is the lipgloss style used for the table headers.
 		HeaderStyle = re.NewStyle().Foreground(purple).Bold(true).Align(lipgloss.Center)
 		// CellStyle is the base lipgloss style used for the table rows.
-		CellStyle = re.NewStyle().Padding(0, 1)
+		CellStyle = re.NewStyle().Padding(0, 2)
 		// OddRowStyle is the lipgloss style used for odd-numbered table rows.
 		OddRowStyle = CellStyle.Copy().Foreground(gray)
 		// EvenRowStyle is the lipgloss style used for even-numbered table rows.

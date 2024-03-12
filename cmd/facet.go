@@ -22,39 +22,82 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"context"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"strings"
 
+	"github.com/charmbracelet/huh/spinner"
+	"github.com/charmbracelet/lipgloss/table"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/mark3labs/louper/components"
+	"github.com/mark3labs/louper/constants"
+	"github.com/mark3labs/louper/types"
 	"github.com/spf13/cobra"
 )
 
-// facetCmd represents the facet command
+// selectorsCmd represents the selectors command
 var facetCmd = &cobra.Command{
 	Use:   "facet",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Get detailed information about a facet contract",
+	Run: func(_ *cobra.Command, _ []string) {
+		facetTable := components.Table("Facet Name", "Facet Address", "Network")
+		selectorsTable := components.Table("Function Signature", "Selector")
+		var status int
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("facet called")
+		ctx, cancel := context.WithCancel(context.Background())
+		go getSelectors(cancel, facetTable, selectorsTable, &status)
+
+		spinner.New().Title("Fetching Facet Details...").Context(ctx).Run()
+
+		if status != 200 {
+			fmt.Println(components.ErrorBox("Facet not found"))
+			return
+		}
+
+		fmt.Println(facetTable)
+		fmt.Println(selectorsTable)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(facetCmd)
+	inspectCmd.AddCommand(facetCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+func getSelectors(cancel context.CancelFunc, facetTable, selectorsTable *table.Table, status *int) {
+	defer cancel()
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// facetCmd.PersistentFlags().String("foo", "", "A help for foo")
-	facetCmd.PersistentFlags().StringVarP(&network, "network", "n", "mainnet", "The network the diamond contract is deployed to")
-	facetCmd.PersistentFlags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to inspect")
-	facetCmd.MarkPersistentFlagRequired("address")
+	// Fetch the ABI from https://anyabi.xyz/api/get-abi/<chain_id>/<contract_address>
+	chainID := constants.ChainNamesToID[network]
+	resp, err := http.Get(fmt.Sprintf("https://anyabi.xyz/api/get-abi/%d/%s", chainID, address))
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// facetCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	defer resp.Body.Close()
+
+	*status = resp.StatusCode
+
+	var abiResp types.AbiResponse
+	err = json.NewDecoder(resp.Body).Decode(&abiResp)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	abiString, err := json.Marshal(abiResp.Abi)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ABI, err := abi.JSON(strings.NewReader(string(abiString)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	facetTable.Row(abiResp.Name, address, network)
+	for _, me := range ABI.Methods {
+		selectorsTable.Row(me.Sig, hex.EncodeToString(me.ID))
+	}
 }
