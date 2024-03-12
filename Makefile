@@ -1,7 +1,7 @@
-.PHONY: all build install clean
+.PHONY: all run install clean
 
-build:
-	@go build -o bin/louper main.go
+run:
+	@go rum main.go
 
 install:
 	@go install .
