@@ -1,6 +1,6 @@
 {
   "name": "@mark3labs/louper-cli",
-  "version": "0.1.7",
+  "version": "0.1.9",
   "description": "Louper - The Ethereum Diamond Inspector",
   "main": "index.js",
   "repository": {
