@@ -85,6 +85,15 @@ type AbiResponse struct {
 	} `json:"abi"`
 }
 
+type DiamondJson struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+	Facets  []struct {
+		Name    string `json:"name"`
+		Address string `json:"address"`
+	} `json:"facets"`
+}
+
 type FacetJson struct {
 	Name      string         `json:"name"`
 	Address   string         `json:"address"`
@@ -95,6 +104,14 @@ type FunctionJson struct {
 	Name      string `json:"name"`
 	Signature string `json:"signature"`
 	Selector  string `json:"selector"`
+}
+
+func (d DiamondJson) String() string {
+	j, err := json.MarshalIndent(d, "", "  ")
+	if err != nil {
+		return ""
+	}
+	return string(j)
 }
 
 func (f FacetJson) String() string {

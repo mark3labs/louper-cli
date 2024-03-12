@@ -43,11 +43,17 @@ var diamondCmd = &cobra.Command{
 		var err error
 		var diamond types.Diamond
 		var diamondTable, facetsTable *table.Table
+		var diamondJson types.DiamondJson
 		ctx, cancel := context.WithCancel(context.Background())
+
 		go func() {
 			defer cancel()
 			diamond, err = getDiamond()
-			diamondTable, facetsTable = formatDiamondData(diamond)
+			if jsonFormat {
+				diamondJson = buildDiamondJson(diamond)
+			} else {
+				diamondTable, facetsTable = buildDiamondTable(diamond)
+			}
 		}()
 
 		spinner.New().Title("Fetching Diamond Details...").Context(ctx).Run()
@@ -57,8 +63,12 @@ var diamondCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(diamondTable)
-		fmt.Println(facetsTable)
+		if jsonFormat {
+			fmt.Println(diamondJson)
+		} else {
+			fmt.Println(diamondTable)
+			fmt.Println(facetsTable)
+		}
 	},
 }
 
@@ -84,11 +94,30 @@ func getDiamond() (types.Diamond, error) {
 	return jsonData.Diamond, nil
 }
 
-func formatDiamondData(diamond types.Diamond) (*table.Table, *table.Table) {
+func buildDiamondTable(diamond types.Diamond) (*table.Table, *table.Table) {
 	diamondTable := components.Table("Diamond Name", "Diamond Address").Row(diamond.Name, diamond.Address)
 	facetsTable := components.Table("Facet Name", "Facet Address")
 	for _, facet := range diamond.Facets {
 		facetsTable.Row(facet.Name, facet.Address)
 	}
 	return diamondTable, facetsTable
+}
+
+func buildDiamondJson(diamond types.Diamond) types.DiamondJson {
+	diamondJson := types.DiamondJson{
+		Name:    diamond.Name,
+		Address: diamond.Address,
+	}
+	for _, facet := range diamond.Facets {
+		f := struct {
+			Name    string `json:"name"`
+			Address string `json:"address"`
+		}{
+			Name:    facet.Name,
+			Address: facet.Address,
+		}
+		diamondJson.Facets = append(diamondJson.Facets, f)
+	}
+
+	return diamondJson
 }
