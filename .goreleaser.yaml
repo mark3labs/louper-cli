@@ -22,6 +22,9 @@ builds:
       - linux
       - windows
       - darwin
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser
+      - -s -w -X github.com/mark3labs/louper-cli/cmd.version={{.Version}}
 
 archives:
   - format: tar.gz

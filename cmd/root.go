@@ -21,25 +21,41 @@ THE SOFTWARE.
 */
 package cmd
 
+//go:generate sh -c "printf %s $(git rev-parse --short HEAD) > .commit"
+
 import (
 	"os"
 
+	_ "embed"
+
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
+
+const purple = lipgloss.Color("99")
 
 var (
 	cfgFile string
 	address string
 	network string
+	//go:embed .commit
+	commit string
+	//go:embed .logo
+	logo    string
+	version string = "dev-" + commit
+
+	re = lipgloss.NewRenderer(os.Stdout)
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "louper",
-	Short: "💎 Louper - The Ethereum Diamond Inspector 💎",
-	Long: `💎 Louper - The Ethereum Diamond Inspector 💎
+	Use:     "louper",
+	Version: version,
+	Short:   "💎 Louper - The Ethereum Diamond Inspector 💎",
+	Long: re.NewStyle().Foreground(purple).Render(logo) + `
+💎 The Ethereum Diamond Inspector 💎
 
-The Louper CLI brings the power of louper.dev to you terminal!
+The Louper CLI brings the power of louper.dev to your terminal!
 Easily manage your EIP-2535 Diamond Proxy contracts with this powerful CLI tool!`,
 }
 

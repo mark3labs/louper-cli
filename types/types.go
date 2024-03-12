@@ -1,5 +1,7 @@
 package types
 
+import "encoding/json"
+
 type DiamondResponse struct {
 	Chain      string  `json:"chain"`
 	Diamond    Diamond `json:"diamond"`
@@ -81,4 +83,24 @@ type AbiResponse struct {
 		Outputs         []interface{} `json:"outputs,omitempty"`
 		Anonymous       bool          `json:"anonymous,omitempty"`
 	} `json:"abi"`
+}
+
+type FacetJson struct {
+	Name      string         `json:"name"`
+	Address   string         `json:"address"`
+	Functions []FunctionJson `json:"functions"`
+}
+
+type FunctionJson struct {
+	Name      string `json:"name"`
+	Signature string `json:"signature"`
+	Selector  string `json:"selector"`
+}
+
+func (f FacetJson) String() string {
+	j, err := json.MarshalIndent(f, "", "  ")
+	if err != nil {
+		return ""
+	}
+	return string(j)
 }

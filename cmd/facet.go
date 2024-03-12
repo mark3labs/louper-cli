@@ -47,6 +47,7 @@ var facetCmd = &cobra.Command{
 		var facetTable, selectorsTable *table.Table
 		var err error
 		var facet types.AbiResponse
+		var facetJson types.FacetJson
 
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
@@ -55,7 +56,11 @@ var facetCmd = &cobra.Command{
 			if err != nil {
 				return
 			}
-			facetTable, selectorsTable = formatFacetData(facet)
+			if jsonFormat {
+				facetJson = buildFacetJson(facet)
+			} else {
+				facetTable, selectorsTable = buildFacetTable(facet)
+			}
 		}()
 
 		spinner.New().Title("Fetching Facet Details...").Context(ctx).Run()
@@ -65,8 +70,12 @@ var facetCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(facetTable)
-		fmt.Println(selectorsTable)
+		if jsonFormat {
+			fmt.Println(facetJson)
+		} else {
+			fmt.Println(facetTable)
+			fmt.Println(selectorsTable)
+		}
 	},
 }
 
@@ -94,7 +103,7 @@ func getFacet() (types.AbiResponse, error) {
 	return abiResp, nil
 }
 
-func formatFacetData(facet types.AbiResponse) (*table.Table, *table.Table) {
+func buildFacetTable(facet types.AbiResponse) (*table.Table, *table.Table) {
 	abiString, err := json.Marshal(facet.Abi)
 	if err != nil {
 		log.Fatal(err)
@@ -114,4 +123,27 @@ func formatFacetData(facet types.AbiResponse) (*table.Table, *table.Table) {
 	}
 
 	return facetTable, selectorsTable
+}
+
+func buildFacetJson(facet types.AbiResponse) types.FacetJson {
+	abiString, err := json.Marshal(facet.Abi)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ABI, err := abi.JSON(strings.NewReader(string(abiString)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var facetJson types.FacetJson
+	facetJson.Name = facet.Name
+	facetJson.Address = address
+	for _, me := range ABI.Methods {
+		var function types.FunctionJson
+		function.Name = me.Name
+		function.Signature = me.Sig
+		function.Selector = hex.EncodeToString(me.ID)
+		facetJson.Functions = append(facetJson.Functions, function)
+	}
+	return facetJson
 }

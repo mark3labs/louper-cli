@@ -13,10 +13,13 @@ var inspectCmd = &cobra.Command{
 	Short: "Get detailed information about a diamond or facet contract",
 }
 
+var jsonFormat bool
+
 func init() {
 	rootCmd.AddCommand(inspectCmd)
 
 	inspectCmd.PersistentFlags().StringVarP(&network, "network", "n", "mainnet", "The network the contract is deployed to")
 	inspectCmd.PersistentFlags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to inspect")
+	inspectCmd.PersistentFlags().BoolVar(&jsonFormat, "json", false, "Display output in JSON format")
 	inspectCmd.MarkPersistentFlagRequired("address")
 }
