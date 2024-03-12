@@ -1,0 +1,31 @@
+{
+  "name": "@mark3labs/louper-cli",
+  "version": "0.1.2",
+  "description": "Louper - The Ethereum Diamond Inspector",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "node postinstall.js install",
+    "preuninstall": "node postinstall.js uninstall"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mark3labs/louper-cli.git"
+  },
+  "author": "Ed Zynda",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mark3labs/louper-cli/issues"
+  },
+  "goBinary": {
+    "name": "louper-cli",
+    "path": "./bin"
+  },
+  "homepage": "https://louper.dev",
+  "files": [
+    "dist",
+    "postinstall.js"
+  ],
+  "dependencies": {
+    "mkdirp": "^1.0.4"
+  }
+}
