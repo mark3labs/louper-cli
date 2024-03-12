@@ -20,7 +20,7 @@
   "goBinary": {
     "name": "louper-cli",
     "path": "./bin",
-    "url": "https://github.com/mark3labs/louper-cli/releases/download/v{{version}}/louper-cli_{{platform}}_{{arch}}.tar.gz"
+    "url": "https://github.com/mark3labs/louper-cli/releases/download/v{{version}}/louper-cli_{{version}}_{{platform}}_{{arch}}.tar.gz"
   },
   "dependencies": {
     "@go-task/go-npm": "^0.2.0"
