@@ -1,4 +1,4 @@
-module github.com/mark3labs/louper
+module github.com/mark3labs/louper-cli
 
 go 1.21.5
 

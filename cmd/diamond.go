@@ -28,8 +28,8 @@ import (
 	"net/http"
 
 	"github.com/charmbracelet/huh/spinner"
-	"github.com/mark3labs/louper/components"
-	"github.com/mark3labs/louper/types"
+	"github.com/mark3labs/louper-cli/components"
+	"github.com/mark3labs/louper-cli/types"
 	"github.com/spf13/cobra"
 )
 

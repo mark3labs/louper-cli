@@ -33,9 +33,9 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/mark3labs/louper/components"
-	"github.com/mark3labs/louper/constants"
-	"github.com/mark3labs/louper/types"
+	"github.com/mark3labs/louper-cli/components"
+	"github.com/mark3labs/louper-cli/constants"
+	"github.com/mark3labs/louper-cli/types"
 	"github.com/spf13/cobra"
 )
 

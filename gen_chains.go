@@ -10,7 +10,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/mark3labs/louper/types"
+	"github.com/mark3labs/louper-cli/types"
 )
 
 func main() {
