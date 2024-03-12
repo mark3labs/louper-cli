@@ -1,33 +1,8 @@
 package types
 
-type Diamond struct {
-	Chain   string `json:"chain"`
-	Diamond struct {
-		Name string `json:"name"`
-		Abi  []struct {
-			StateMutability string `json:"stateMutability,omitempty"`
-			Type            string `json:"type"`
-			Name            string `json:"name,omitempty"`
-			Inputs          []struct {
-				InternalType string `json:"internalType"`
-				Name         string `json:"name"`
-				Type         string `json:"type"`
-			} `json:"inputs,omitempty"`
-		} `json:"abi"`
-		Address string `json:"address"`
-		Facets  []struct {
-			Name    string `json:"name"`
-			Address string `json:"address"`
-			Abi     []struct {
-				Name            string `json:"name"`
-				Type            string `json:"type"`
-				StateMutability string `json:"stateMutability,omitempty"`
-				Inputs          []any  `json:"inputs"`
-				Outputs         []any  `json:"outputs,omitempty"`
-				Anonymous       bool   `json:"anonymous,omitempty"`
-			} `json:"abi"`
-		} `json:"facets"`
-	} `json:"diamond"`
+type DiamondResponse struct {
+	Chain      string  `json:"chain"`
+	Diamond    Diamond `json:"diamond"`
 	DiamondAbi []struct {
 		Name            string `json:"name,omitempty"`
 		Type            string `json:"type"`
@@ -36,6 +11,33 @@ type Diamond struct {
 		Outputs         []any  `json:"outputs,omitempty"`
 		Anonymous       bool   `json:"anonymous,omitempty"`
 	} `json:"diamondAbi"`
+}
+
+type Diamond struct {
+	Name string `json:"name"`
+	Abi  []struct {
+		StateMutability string `json:"stateMutability,omitempty"`
+		Type            string `json:"type"`
+		Name            string `json:"name,omitempty"`
+		Inputs          []struct {
+			InternalType string `json:"internalType"`
+			Name         string `json:"name"`
+			Type         string `json:"type"`
+		} `json:"inputs,omitempty"`
+	} `json:"abi"`
+	Address string `json:"address"`
+	Facets  []struct {
+		Name    string `json:"name"`
+		Address string `json:"address"`
+		Abi     []struct {
+			Name            string `json:"name"`
+			Type            string `json:"type"`
+			StateMutability string `json:"stateMutability,omitempty"`
+			Inputs          []any  `json:"inputs"`
+			Outputs         []any  `json:"outputs,omitempty"`
+			Anonymous       bool   `json:"anonymous,omitempty"`
+		} `json:"abi"`
+	} `json:"facets"`
 }
 
 type Chain struct {

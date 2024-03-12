@@ -22,12 +22,14 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/charmbracelet/huh/spinner"
+	"github.com/charmbracelet/lipgloss/table"
 	"github.com/mark3labs/louper-cli/components"
 	"github.com/mark3labs/louper-cli/types"
 	"github.com/spf13/cobra"
@@ -38,32 +40,55 @@ var diamondCmd = &cobra.Command{
 	Use:   "diamond",
 	Short: "Get detailed information about a dimaond contract",
 	Run: func(_ *cobra.Command, _ []string) {
-		var resp *http.Response
 		var err error
-		var jsonData types.Diamond
-		spinner.New().Title("Fetching Diamond Details...").Action(func() {
-			// Fetch JSON from https://louper.dev/diamond/{address}/json?network={network}
-			resp, err = http.Get("https://louper.dev/diamond/" + address + "/json?network=" + network)
-			if err != nil {
-				fmt.Println("Error fetching JSON from Louper API")
-			}
-			defer resp.Body.Close()
-			rawBody, _ := io.ReadAll(resp.Body)
-			// Marshal JSON into struct
-			json.Unmarshal(rawBody, &jsonData)
-		}).Run()
+		var diamond types.Diamond
+		var diamondTable, facetsTable *table.Table
+		ctx, cancel := context.WithCancel(context.Background())
+		go func() {
+			defer cancel()
+			diamond, err = getDiamond()
+			diamondTable, facetsTable = formatDiamondData(diamond)
+		}()
 
-		fmt.Println(components.Table("Diamond Name", "Diamond Address").Row(jsonData.Diamond.Name, jsonData.Diamond.Address))
+		spinner.New().Title("Fetching Diamond Details...").Context(ctx).Run()
 
-		facetsTable := components.Table("Facet Name", "Facet Address")
-		for _, facet := range jsonData.Diamond.Facets {
-			facetsTable.Row(facet.Name, facet.Address)
+		if err != nil {
+			fmt.Println(components.ErrorBox(err.Error()))
+			return
 		}
 
+		fmt.Println(diamondTable)
 		fmt.Println(facetsTable)
 	},
 }
 
 func init() {
 	inspectCmd.AddCommand(diamondCmd)
+}
+
+func getDiamond() (types.Diamond, error) {
+	var resp *http.Response
+	var err error
+	var jsonData types.DiamondResponse
+	spinner.New().Title("Fetching Diamond Details...").Action(func() {
+		// Fetch JSON from https://louper.dev/diamond/{address}/json?network={network}
+		resp, err = http.Get("https://louper.dev/diamond/" + address + "/json?network=" + network)
+		if err != nil {
+			fmt.Println("Error fetching JSON from Louper API")
+		}
+		defer resp.Body.Close()
+		rawBody, _ := io.ReadAll(resp.Body)
+		// Marshal JSON into struct
+		json.Unmarshal(rawBody, &jsonData)
+	}).Run()
+	return jsonData.Diamond, nil
+}
+
+func formatDiamondData(diamond types.Diamond) (*table.Table, *table.Table) {
+	diamondTable := components.Table("Diamond Name", "Diamond Address").Row(diamond.Name, diamond.Address)
+	facetsTable := components.Table("Facet Name", "Facet Address")
+	for _, facet := range diamond.Facets {
+		facetsTable.Row(facet.Name, facet.Address)
+	}
+	return diamondTable, facetsTable
 }

@@ -44,17 +44,24 @@ var facetCmd = &cobra.Command{
 	Use:   "facet",
 	Short: "Get detailed information about a facet contract",
 	Run: func(_ *cobra.Command, _ []string) {
-		facetTable := components.Table("Facet Name", "Facet Address", "Network")
-		selectorsTable := components.Table("Function Signature", "Selector")
-		var status int
+		var facetTable, selectorsTable *table.Table
+		var err error
+		var facet types.AbiResponse
 
 		ctx, cancel := context.WithCancel(context.Background())
-		go getSelectors(cancel, facetTable, selectorsTable, &status)
+		go func() {
+			defer cancel()
+			facet, err = getFacet()
+			if err != nil {
+				return
+			}
+			facetTable, selectorsTable = formatFacetData(facet)
+		}()
 
 		spinner.New().Title("Fetching Facet Details...").Context(ctx).Run()
 
-		if status != 200 {
-			fmt.Println(components.ErrorBox("Facet not found"))
+		if err != nil {
+			fmt.Println(components.ErrorBox(err.Error()))
 			return
 		}
 
@@ -67,27 +74,28 @@ func init() {
 	inspectCmd.AddCommand(facetCmd)
 }
 
-func getSelectors(cancel context.CancelFunc, facetTable, selectorsTable *table.Table, status *int) {
-	defer cancel()
-
-	// Fetch the ABI from https://anyabi.xyz/api/get-abi/<chain_id>/<contract_address>
+func getFacet() (types.AbiResponse, error) {
 	chainID := constants.ChainNamesToID[network]
 	resp, err := http.Get(fmt.Sprintf("https://anyabi.xyz/api/get-abi/%d/%s", chainID, address))
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer resp.Body.Close()
-
-	*status = resp.StatusCode
-
 	var abiResp types.AbiResponse
 	err = json.NewDecoder(resp.Body).Decode(&abiResp)
 	if err != nil {
-		log.Fatal(err)
+		return types.AbiResponse{}, err
 	}
 
-	abiString, err := json.Marshal(abiResp.Abi)
+	if resp.StatusCode != 200 {
+		return types.AbiResponse{}, fmt.Errorf("facet not found")
+	}
+
+	return abiResp, nil
+}
+
+func formatFacetData(facet types.AbiResponse) (*table.Table, *table.Table) {
+	abiString, err := json.Marshal(facet.Abi)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -96,8 +104,14 @@ func getSelectors(cancel context.CancelFunc, facetTable, selectorsTable *table.T
 		log.Fatal(err)
 	}
 
-	facetTable.Row(abiResp.Name, address, network)
+	facetTable := components.Table("Facet Name", "Facet Address", "Network").Row(facet.Name, address, network)
+	selectorsTable := components.Table("Method Signature", "Selector")
 	for _, me := range ABI.Methods {
 		selectorsTable.Row(me.Sig, hex.EncodeToString(me.ID))
 	}
+	if len(ABI.Methods) == 0 {
+		selectorsTable.Row("No methods found", "No selectors found")
+	}
+
+	return facetTable, selectorsTable
 }
