@@ -1,11 +1,10 @@
 {
   "name": "@mark3labs/louper-cli",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Louper - The Ethereum Diamond Inspector",
   "main": "index.js",
   "scripts": {
-    "postinstall": "node postinstall.js install",
-    "preuninstall": "node postinstall.js uninstall"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -16,16 +15,15 @@
   "bugs": {
     "url": "https://github.com/mark3labs/louper-cli/issues"
   },
-  "goBinary": {
-    "name": "louper-cli",
-    "path": "./bin"
-  },
-  "homepage": "https://louper.dev",
-  "files": [
-    "dist",
-    "postinstall.js"
-  ],
+  "homepage": "https://github.com/mark3labs/louper-cli#readme",
   "dependencies": {
-    "mkdirp": "^1.0.4"
+    "go-npm": "^0.1.9"
+  },
+  "postinstall": "go-npm install",
+  "preuninstall": "go-npm uninstall",
+  "goBinary": {
+    "name": "command-name",
+    "path": "./bin",
+    "url": "https://github.com/mark3labs/louper-cli/releases/download/v{{version}}/louper-cli_{{version}}_{{platform}}_{{arch}}.tar.gz"
   }
 }
