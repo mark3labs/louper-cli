@@ -16,14 +16,14 @@
     "url": "https://github.com/mark3labs/louper-cli/issues"
   },
   "homepage": "https://github.com/mark3labs/louper-cli#readme",
-  "dependencies": {
-    "go-npm": "^0.1.9"
-  },
   "postinstall": "go-npm install",
   "preuninstall": "go-npm uninstall",
   "goBinary": {
     "name": "command-name",
     "path": "./bin",
     "url": "https://github.com/mark3labs/louper-cli/releases/download/v{{version}}/louper-cli_{{version}}_{{platform}}_{{arch}}.tar.gz"
+  },
+  "dependencies": {
+    "@go-task/go-npm": "^0.2.0"
   }
 }
