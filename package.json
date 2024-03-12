@@ -1,6 +1,6 @@
 {
   "name": "@mark3labs/louper-cli",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Louper - The Ethereum Diamond Inspector",
   "main": "index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   "postinstall": "go-npm install",
   "preuninstall": "go-npm uninstall",
   "goBinary": {
-    "name": "command-name",
+    "name": "louper-cli",
     "path": "./bin",
     "url": "https://github.com/mark3labs/louper-cli/releases/download/v{{version}}/louper-cli_{{version}}_{{platform}}_{{arch}}.tar.gz"
   },
