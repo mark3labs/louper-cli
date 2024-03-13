@@ -21,8 +21,6 @@ THE SOFTWARE.
 */
 package cmd
 
-//go:generate sh -c "printf %s $(git rev-parse --short HEAD) > .commit"
-
 import (
 	"os"
 
@@ -38,11 +36,9 @@ var (
 	cfgFile string
 	address string
 	network string
-	//go:embed .commit
-	commit string
 	//go:embed .logo
 	logo    string
-	version string = "dev-" + commit
+	version string = "dev"
 
 	re = lipgloss.NewRenderer(os.Stdout)
 )
