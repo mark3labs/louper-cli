@@ -58,7 +58,7 @@ var diamondCutCmd = &cobra.Command{
 			displayCalldata(cuts)
 			return
 		} else {
-			fmt.Println("Not implemented yet!")
+			executeCut(cuts)
 		}
 	},
 }
@@ -119,11 +119,15 @@ func parseDiamondCut(rawCut string) (types.DiamondCut, error) {
 	}, nil
 }
 
-func displayCalldata(cut []types.DiamondCut) {
-	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cut, common.Address{}, []byte{})
+func displayCalldata(cuts []types.DiamondCut) {
+	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cuts, common.Address{}, []byte{})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Printf("0x%s", hex.EncodeToString(calldata))
+}
+
+func executeCut(cuts []types.DiamondCut) {
+	fmt.Println("Not implemented yet!")
 }
