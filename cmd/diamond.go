@@ -95,7 +95,7 @@ func getDiamond() (types.Diamond, error) {
 }
 
 func buildDiamondTable(diamond types.Diamond) (*table.Table, *table.Table) {
-	diamondTable := components.Table("Diamond Name", "Diamond Address").Row(diamond.Name, diamond.Address)
+	diamondTable := components.Table("Diamond Name", "Diamond Address", "Network").Row(diamond.Name, diamond.Address, network)
 	facetsTable := components.Table("Facet Name", "Facet Address")
 	for _, facet := range diamond.Facets {
 		facetsTable.Row(facet.Name, facet.Address)
