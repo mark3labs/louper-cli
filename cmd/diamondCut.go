@@ -22,12 +22,19 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"math/big"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/mark3labs/louper-cli/bindings/diamondCut"
+	"github.com/mark3labs/louper-cli/constants"
 	"github.com/mark3labs/louper-cli/types"
 	"github.com/mark3labs/louper-cli/utils"
 	"github.com/spf13/cobra"
@@ -44,7 +51,7 @@ var diamondCutCmd = &cobra.Command{
 	Use:   "diamond-cut",
 	Short: "Add, Remove or Replace facets in a diamond contract",
 	Run: func(_ *cobra.Command, _ []string) {
-		cuts := []types.DiamondCut{}
+		cuts := []diamondCut.IDiamondFacetCut{}
 		for _, rawCut := range rawCuts {
 			cut, err := parseDiamondCut(rawCut)
 			if err != nil {
@@ -76,10 +83,10 @@ func init() {
 	diamondCutCmd.MarkFlagRequired("address")
 }
 
-func parseDiamondCut(rawCut string) (types.DiamondCut, error) {
+func parseDiamondCut(rawCut string) (diamondCut.IDiamondFacetCut, error) {
 	parts := strings.Split(rawCut, "|")
 	if len(parts) != 3 {
-		return types.DiamondCut{}, fmt.Errorf("invalid raw cut data: %s", rawCut)
+		return diamondCut.IDiamondFacetCut{}, fmt.Errorf("invalid raw cut data: %s", rawCut)
 	}
 
 	action := strings.ToLower(parts[0])
@@ -96,7 +103,7 @@ func parseDiamondCut(rawCut string) (types.DiamondCut, error) {
 	address := common.HexToAddress(parts[1])
 
 	if parts[2] == "" {
-		return types.DiamondCut{}, fmt.Errorf("no function selectors provided: %s", rawCut)
+		return diamondCut.IDiamondFacetCut{}, fmt.Errorf("no function selectors provided: %s", rawCut)
 	}
 
 	selectors := strings.Split(parts[2], ",")
@@ -105,21 +112,21 @@ func parseDiamondCut(rawCut string) (types.DiamondCut, error) {
 		selector = strings.TrimPrefix(selector, "0x")
 		selectorBytes, err := hex.DecodeString(selector)
 		if err != nil {
-			return types.DiamondCut{}, fmt.Errorf("invalid function selector: 0x%s", selector)
+			return diamondCut.IDiamondFacetCut{}, fmt.Errorf("invalid function selector: 0x%s", selector)
 		}
 		var functionSelector [4]byte
 		copy(functionSelector[:], selectorBytes[:4])
 		functionSelectors = append(functionSelectors, functionSelector)
 	}
 
-	return types.DiamondCut{
+	return diamondCut.IDiamondFacetCut{
 		FunctionSelectors: functionSelectors,
 		FacetAddress:      address,
 		Action:            facetCutAction,
 	}, nil
 }
 
-func displayCalldata(cuts []types.DiamondCut) {
+func displayCalldata(cuts []diamondCut.IDiamondFacetCut) {
 	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cuts, common.Address{}, []byte{})
 	if err != nil {
 		fmt.Println(err)
@@ -128,6 +135,49 @@ func displayCalldata(cuts []types.DiamondCut) {
 	fmt.Printf("0x%s", hex.EncodeToString(calldata))
 }
 
-func executeCut(cuts []types.DiamondCut) {
-	fmt.Println("Not implemented yet!")
+func executeCut(cuts []diamondCut.IDiamondFacetCut) {
+	client, err := ethclient.Dial(constants.RPCUrls[network])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pKey, err := utils.GetPrivateKey(privateKey)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	auth, err := bind.NewKeyedTransactorWithChainID(pKey, big.NewInt(int64(constants.ChainNamesToID[network])))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fromAddress := crypto.PubkeyToAddress(pKey.PublicKey)
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)      // in wei
+	auth.GasLimit = uint64(1000000) // TODO: Use EstimateGas
+	auth.GasPrice = gasPrice
+
+	diamond, err := diamondCut.NewDiamondCut(common.HexToAddress(address), client)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tx, err := diamond.DiamondCut(auth, cuts, common.Address{}, []byte{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())
 }
