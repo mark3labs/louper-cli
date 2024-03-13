@@ -22,25 +22,44 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/mark3labs/louper-cli/bindings/diamondCut"
+	"github.com/mark3labs/louper-cli/types"
+	"github.com/mark3labs/louper-cli/utils"
 	"github.com/spf13/cobra"
 )
 
-var dumpCallData bool
+var (
+	dumpCallData bool
+	privateKey   string
+	rawCuts      []string
+)
 
 // diamondCutCmd represents the diamondCut command
 var diamondCutCmd = &cobra.Command{
 	Use:   "diamond-cut",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Add, Remove or Replace facets in a diamond contract",
+	Run: func(_ *cobra.Command, _ []string) {
+		cuts := []types.DiamondCut{}
+		for _, rawCut := range rawCuts {
+			cut, err := parseDiamondCut(rawCut)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			cuts = append(cuts, cut)
+		}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Not implemented yet!")
+		if dumpCallData {
+			displayCalldata(cuts)
+			return
+		} else {
+			fmt.Println("Not implemented yet!")
+		}
 	},
 }
 
@@ -49,6 +68,62 @@ func init() {
 
 	diamondCutCmd.Flags().StringVarP(&network, "network", "n", "mainnet", "The network the diamond contract is deployed to")
 	diamondCutCmd.Flags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to cut")
+	diamondCutCmd.Flags().StringVarP(&privateKey, "private-key", "p", "", "The private key to use to sign the transaction")
 	diamondCutCmd.Flags().BoolVar(&dumpCallData, "calldata", false, "Dump the call data for the diamond cut")
+	diamondCutCmd.Flags().StringArrayVar(&rawCuts, "cut", []string{}, "A list of raw diamond cut data to apply to the contract")
+	diamondCutCmd.MarkFlagsOneRequired("private-key", "calldata")
+	diamondCutCmd.MarkFlagsMutuallyExclusive("private-key", "calldata")
 	diamondCutCmd.MarkFlagRequired("address")
+}
+
+func parseDiamondCut(rawCut string) (types.DiamondCut, error) {
+	parts := strings.Split(rawCut, "|")
+	if len(parts) != 3 {
+		return types.DiamondCut{}, fmt.Errorf("invalid raw cut data: %s", rawCut)
+	}
+
+	action := strings.ToLower(parts[0])
+	var facetCutAction uint8
+	switch action {
+	case "add":
+		facetCutAction = types.Add
+	case "replace":
+		facetCutAction = types.Replace
+	case "remove":
+		facetCutAction = types.Remove
+	}
+
+	address := common.HexToAddress(parts[1])
+
+	if parts[2] == "" {
+		return types.DiamondCut{}, fmt.Errorf("no function selectors provided: %s", rawCut)
+	}
+
+	selectors := strings.Split(parts[2], ",")
+	var functionSelectors [][4]byte
+	for _, selector := range selectors {
+		selector = strings.TrimPrefix(selector, "0x")
+		selectorBytes, err := hex.DecodeString(selector)
+		if err != nil {
+			return types.DiamondCut{}, fmt.Errorf("invalid function selector: 0x%s", selector)
+		}
+		var functionSelector [4]byte
+		copy(functionSelector[:], selectorBytes[:4])
+		functionSelectors = append(functionSelectors, functionSelector)
+	}
+
+	return types.DiamondCut{
+		FunctionSelectors: functionSelectors,
+		FacetAddress:      address,
+		Action:            facetCutAction,
+	}, nil
+}
+
+func displayCalldata(cut []types.DiamondCut) {
+	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cut, common.Address{}, []byte{})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("0x%s", hex.EncodeToString(calldata))
 }
