@@ -80,17 +80,19 @@ func getDiamond() (types.Diamond, error) {
 	var resp *http.Response
 	var err error
 	var jsonData types.DiamondResponse
-	spinner.New().Title("Fetching Diamond Details...").Action(func() {
-		// Fetch JSON from https://louper.dev/diamond/{address}/json?network={network}
-		resp, err = http.Get("https://louper.dev/diamond/" + address + "/json?network=" + network)
-		if err != nil {
-			fmt.Println("Error fetching JSON from Louper API")
-		}
-		defer resp.Body.Close()
-		rawBody, _ := io.ReadAll(resp.Body)
-		// Marshal JSON into struct
-		json.Unmarshal(rawBody, &jsonData)
-	}).Run()
+	resp, err = http.Get("https://louper.dev/diamond/" + address + "/json?network=" + network)
+	if err != nil {
+		return types.Diamond{}, fmt.Errorf("failed to fetch diamond")
+	}
+
+	if resp.StatusCode != 200 {
+		return types.Diamond{}, fmt.Errorf("facet not found")
+	}
+
+	defer resp.Body.Close()
+	rawBody, _ := io.ReadAll(resp.Body)
+	// Marshal JSON into struct
+	json.Unmarshal(rawBody, &jsonData)
 	return jsonData.Diamond, nil
 }
 

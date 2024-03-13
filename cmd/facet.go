@@ -93,7 +93,7 @@ func getFacet() (types.AbiResponse, error) {
 	var abiResp types.AbiResponse
 	err = json.NewDecoder(resp.Body).Decode(&abiResp)
 	if err != nil {
-		return types.AbiResponse{}, err
+		return types.AbiResponse{}, fmt.Errorf("failed to fetch facet")
 	}
 
 	if resp.StatusCode != 200 {
