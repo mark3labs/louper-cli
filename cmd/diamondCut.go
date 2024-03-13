@@ -22,43 +22,33 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"os"
+	"fmt"
 
-	_ "embed"
-
-	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
-const purple = lipgloss.Color("99")
+var dumpCallData bool
 
-var (
-	address string
-	network string
-	//go:embed .logo
-	logo    string
-	version string = "dev"
+// diamondCutCmd represents the diamondCut command
+var diamondCutCmd = &cobra.Command{
+	Use:   "diamond-cut",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
 
-	re = lipgloss.NewRenderer(os.Stdout)
-)
-
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:     "louper",
-	Version: version,
-	Short:   "💎 Louper - The Ethereum Diamond Inspector 💎",
-	Long: re.NewStyle().Foreground(purple).Render(logo) + `
-💎 The Ethereum Diamond Inspector 💎
-
-The Louper CLI brings the power of louper.dev to your terminal!
-Easily manage your EIP-2535 Diamond Proxy contracts with this powerful CLI tool!`,
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Not implemented yet!")
+	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
+func init() {
+	rootCmd.AddCommand(diamondCutCmd)
+
+	diamondCutCmd.Flags().StringVarP(&network, "network", "n", "mainnet", "The network the diamond contract is deployed to")
+	diamondCutCmd.Flags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to cut")
+	diamondCutCmd.Flags().BoolVar(&dumpCallData, "calldata", false, "Dump the call data for the diamond cut")
+	diamondCutCmd.MarkFlagRequired("address")
 }
