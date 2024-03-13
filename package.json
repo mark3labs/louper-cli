@@ -24,5 +24,8 @@
   },
   "dependencies": {
     "@go-task/go-npm": "^0.2.0"
+  },
+  "devDependencies": {
+    "semver": "^7.6.0"
   }
 }
