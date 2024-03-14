@@ -22,11 +22,14 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	_ "embed"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mark3labs/louper-cli/components"
+	"github.com/mark3labs/louper-cli/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -52,6 +55,14 @@ var rootCmd = &cobra.Command{
 
 The Louper CLI brings the power of louper.dev to your terminal!
 Easily manage your EIP-2535 Diamond Proxy contracts with this powerful CLI tool!`,
+	PersistentPreRun: func(_ *cobra.Command, _ []string) {
+		if address != "" {
+			if !utils.IsValidAddress(address) {
+				fmt.Println(components.ErrorBox("Invalid address"))
+				os.Exit(0)
+			}
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

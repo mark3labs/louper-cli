@@ -11,6 +11,8 @@ const (
 	purple    = lipgloss.Color("99")
 	gray      = lipgloss.Color("245")
 	lightGray = lipgloss.Color("241")
+	red       = lipgloss.Color("9")
+	green     = lipgloss.Color("10")
 )
 
 func Table(headers ...string) *table.Table {
@@ -48,6 +50,16 @@ func Table(headers ...string) *table.Table {
 }
 
 func ErrorBox(msg string) string {
-	errorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true).Padding(1).Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("9"))
-	return errorStyle.Render("! " + msg + " !")
+	errorStyle := lipgloss.NewStyle().Foreground(red).Bold(true).Padding(1).Border(lipgloss.RoundedBorder()).BorderForeground(red)
+	return errorStyle.Render("🚨 " + msg + " 🚨")
+}
+
+func SuccessBox(msg string) string {
+	successStyle := lipgloss.NewStyle().Foreground(green).Bold(true).Padding(1).Border(lipgloss.RoundedBorder()).BorderForeground(green)
+	return successStyle.Render("✅ " + msg + " ✅")
+}
+
+func Box(msg string) string {
+	boxStyle := lipgloss.NewStyle().Padding(1).Border(lipgloss.RoundedBorder()).BorderForeground(purple)
+	return boxStyle.Render(msg)
 }
