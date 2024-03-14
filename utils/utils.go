@@ -57,3 +57,11 @@ func EstimateGas(client ethclient.Client, from, to common.Address, data []byte) 
 	}
 	return gas, nil
 }
+
+func IsContract(client *ethclient.Client, address common.Address) bool {
+	code, err := client.CodeAt(context.Background(), address, nil)
+	if err != nil {
+		return false
+	}
+	return len(code) > 0
+}

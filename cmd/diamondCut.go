@@ -28,8 +28,10 @@ import (
 	"log"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -46,6 +48,7 @@ var (
 	dumpCallData bool
 	privateKey   string
 	rawCuts      []string
+	rpcUrl       string
 )
 
 // diamondCutCmd represents the diamondCut command
@@ -79,12 +82,14 @@ func init() {
 	rootCmd.AddCommand(diamondCutCmd)
 
 	diamondCutCmd.Flags().StringVarP(&network, "network", "n", "mainnet", "The network the diamond contract is deployed to")
+	diamondCutCmd.Flags().StringVar(&rpcUrl, "rpc-url", "", "The RPC endpoint")
 	diamondCutCmd.Flags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to cut")
 	diamondCutCmd.Flags().StringVarP(&privateKey, "private-key", "p", "", "The private key to use to sign the transaction")
 	diamondCutCmd.Flags().BoolVar(&dumpCallData, "calldata", false, "Dump the call data for the diamond cut")
 	diamondCutCmd.Flags().StringArrayVar(&rawCuts, "cut", []string{}, "A list of raw diamond cut data to apply to the contract")
 	diamondCutCmd.MarkFlagsOneRequired("private-key", "calldata")
 	diamondCutCmd.MarkFlagsMutuallyExclusive("private-key", "calldata")
+	diamondCutCmd.MarkFlagsMutuallyExclusive("network", "rpc-url")
 	diamondCutCmd.MarkFlagRequired("address")
 }
 
@@ -152,10 +157,34 @@ func displayCalldata(cuts []diamondCut.IDiamondFacetCut) {
 // executeCut
 // @param cuts - The cuts to execute
 func executeCut(cuts []diamondCut.IDiamondFacetCut) {
+	var clientRpcUrl string
+	var chainId *big.Int
+
+	if rpcUrl != "" {
+		clientRpcUrl = rpcUrl
+	} else {
+		clientRpcUrl = constants.RPCUrls[network]
+	}
+
 	// Connect to the network
-	client, err := ethclient.Dial(constants.RPCUrls[network])
+	client, err := ethclient.Dial(clientRpcUrl)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if rpcUrl != "" {
+		chainId, err = client.ChainID(context.Background())
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		chainId = big.NewInt(int64(constants.ChainNamesToID[network]))
+	}
+
+	// Check if the address is a valid contract address
+	if !utils.IsContract(client, common.HexToAddress(address)) {
+		fmt.Println(components.ErrorBox(fmt.Sprintf("%s is not a valid contract address", address)))
+		return
 	}
 
 	// Get the private key
@@ -172,7 +201,7 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 	}
 
 	// Create the transactor
-	auth, err := bind.NewKeyedTransactorWithChainID(pKey, big.NewInt(int64(constants.ChainNamesToID[network])))
+	auth, err := bind.NewKeyedTransactorWithChainID(pKey, chainId)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -260,5 +289,19 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Transaction sent: %s\n", tx.Hash().Hex())
+	fmt.Printf("✅ Transaction sent: %s\n", tx.Hash().Hex())
+
+	// Wait for the TX to be included
+	spinner.New().Title("Waiting for TX receipt...").Action(func() {
+		isPending := true
+		var err error
+		for !isPending {
+			_, isPending, err = client.TransactionByHash(context.Background(), tx.Hash())
+			if err != nil {
+				log.Fatal(err)
+			}
+			time.Sleep(1 * time.Second)
+		}
+		fmt.Println("✅ Done!")
+	}).Run()
 }
