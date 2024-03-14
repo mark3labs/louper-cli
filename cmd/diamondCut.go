@@ -85,7 +85,7 @@ func init() {
 	diamondCutCmd.Flags().StringVarP(&address, "address", "a", "", "The address of the diamond contract to cut")
 	diamondCutCmd.Flags().StringVarP(&privateKey, "private-key", "p", "", "The private key to use to sign the transaction")
 	diamondCutCmd.Flags().BoolVar(&dumpCallData, "calldata", false, "Dump the call data for the diamond cut")
-	diamondCutCmd.Flags().StringArrayVar(&rawCuts, "cut", []string{}, "A list of raw diamond cut data to apply to the contract")
+	diamondCutCmd.Flags().StringArrayVar(&rawCuts, "cut", []string{}, "A list of diamond cuts.\ne.g. --cut 'add|<FACET_ADDRESS>|0x...,0x...' --cut 'remove|<ZERO_ADDRESS>|0x...0x...'")
 	diamondCutCmd.MarkFlagsOneRequired("private-key", "calldata")
 	diamondCutCmd.MarkFlagsMutuallyExclusive("private-key", "calldata")
 	diamondCutCmd.MarkFlagsMutuallyExclusive("network", "rpc-url")
