@@ -39,6 +39,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var justSelectors bool
+
 // selectorsCmd represents the selectors command
 var facetCmd = &cobra.Command{
 	Use:   "facet",
@@ -56,7 +58,7 @@ var facetCmd = &cobra.Command{
 			if err != nil {
 				return
 			}
-			if jsonFormat {
+			if jsonFormat || justSelectors {
 				facetJson = buildFacetJson(facet)
 			} else {
 				facetTable, selectorsTable = buildFacetTable(facet)
@@ -67,6 +69,15 @@ var facetCmd = &cobra.Command{
 
 		if err != nil {
 			fmt.Println(components.ErrorBox(err.Error()))
+			return
+		}
+
+		if justSelectors {
+			var selectors []string
+			for _, me := range facetJson.Functions {
+				selectors = append(selectors, "0x"+me.Selector)
+			}
+			fmt.Println(strings.Join(selectors, ","))
 			return
 		}
 
@@ -81,6 +92,7 @@ var facetCmd = &cobra.Command{
 
 func init() {
 	inspectCmd.AddCommand(facetCmd)
+	facetCmd.Flags().BoolVar(&justSelectors, "selectors", false, "Only display a comma separated list of selectors")
 }
 
 func getFacet() (types.AbiResponse, error) {
