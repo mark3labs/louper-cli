@@ -25,7 +25,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"math/big"
 	"strings"
 	"time"
@@ -61,7 +60,7 @@ var diamondCutCmd = &cobra.Command{
 		for _, rawCut := range rawCuts {
 			cut, err := parseDiamondCut(rawCut)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println(components.ErrorBox(err.Error()))
 				return
 			}
 			cuts = append(cuts, cut)
@@ -148,7 +147,7 @@ func parseDiamondCut(rawCut string) (diamondCut.IDiamondFacetCut, error) {
 func displayCalldata(cuts []diamondCut.IDiamondFacetCut) {
 	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cuts, common.Address{}, []byte{})
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(components.ErrorBox(err.Error()))
 		return
 	}
 	fmt.Printf("0x%s", hex.EncodeToString(calldata))
@@ -169,13 +168,15 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 	// Connect to the network
 	client, err := ethclient.Dial(clientRpcUrl)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(components.ErrorBox(err.Error()))
+		return
 	}
 
 	if rpcUrl != "" {
 		chainId, err = client.ChainID(context.Background())
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(components.ErrorBox(err.Error()))
+			return
 		}
 	} else {
 		chainId = big.NewInt(int64(constants.ChainNamesToID[network]))
@@ -190,20 +191,21 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 	// Get the private key
 	pKey, err := utils.GetPrivateKey(privateKey)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(components.ErrorBox(err.Error()))
 		return
 	}
 
 	// Get the gas price
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(components.ErrorBox(err.Error()))
+		return
 	}
 
 	// Create the transactor
 	auth, err := bind.NewKeyedTransactorWithChainID(pKey, chainId)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(components.ErrorBox(err.Error()))
 		return
 	}
 
@@ -211,7 +213,7 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 	fromAddress := crypto.PubkeyToAddress(pKey.PublicKey)
 	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(components.ErrorBox(err.Error()))
 		return
 	}
 
@@ -236,7 +238,8 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 	// Create the diamond cut contract
 	diamond, err := diamondCut.NewDiamondCut(common.HexToAddress(address), client)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(components.ErrorBox(err.Error()))
+		return
 	}
 
 	detailsTable := components.Table("Action", "Facet", "Selectors")
@@ -286,7 +289,8 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 	// Execute the cut
 	tx, err := diamond.DiamondCut(auth, cuts, common.Address{}, []byte{})
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(components.ErrorBox(err.Error()))
+		return
 	}
 
 	fmt.Printf("✅ Transaction sent: %s\n", tx.Hash().Hex())
@@ -298,7 +302,8 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 		for !isPending {
 			_, isPending, err = client.TransactionByHash(context.Background(), tx.Hash())
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println(components.ErrorBox(err.Error()))
+				return
 			}
 			time.Sleep(1 * time.Second)
 		}
