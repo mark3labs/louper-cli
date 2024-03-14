@@ -27,5 +27,8 @@
   },
   "devDependencies": {
     "semver": "^7.6.0"
+  },
+  "bin": {
+    "louper-cli": "bin/louper-cli"
   }
 }
