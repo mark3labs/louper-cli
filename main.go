@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-//go:generate go run ./gen_chains.go
+//go:generate go run ./codegen/gen_chains.go
 //go:generate go fmt ./constants/chains_generated.go
 
 import "github.com/mark3labs/louper-cli/cmd"

@@ -6,7 +6,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 	"os"
 	"text/template"
 
@@ -40,16 +39,15 @@ var RPCUrls = map[string]string{
   {{ end }}
 }`))
 
-	// Get chains from https://louper.dev/chains
-	resp, err := http.Get("https://louper.dev/chains")
+	file, err := os.Open("./codegen/chains.json") // the file you want to read
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer file.Close()
 
 	var chains types.Chains
 
-	err = json.NewDecoder(resp.Body).Decode(&chains)
+	err = json.NewDecoder(file).Decode(&chains)
 	if err != nil {
 		log.Fatal(err)
 	}
