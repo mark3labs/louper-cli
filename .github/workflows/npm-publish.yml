@@ -1,9 +1,10 @@
 name: npm-publish
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_run:
+    workflows: ["goreleaser"]
+    types:
+      - completed
 
 jobs:
   publish:
