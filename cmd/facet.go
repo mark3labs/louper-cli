@@ -128,7 +128,7 @@ func buildFacetTable(facet types.AbiResponse) (*table.Table, *table.Table) {
 	facetTable := components.Table("Facet Name", "Facet Address", "Network").Row(facet.Name, address, network)
 	selectorsTable := components.Table("Method Signature", "Selector")
 	for _, me := range ABI.Methods {
-		selectorsTable.Row(me.Sig, hex.EncodeToString(me.ID))
+		selectorsTable.Row(me.Sig, "0x"+hex.EncodeToString(me.ID))
 	}
 	if len(ABI.Methods) == 0 {
 		selectorsTable.Row("No methods found", "No selectors found")

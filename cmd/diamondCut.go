@@ -47,6 +47,7 @@ var (
 	dumpCallData bool
 	privateKey   string
 	rawCuts      []string
+	initData     string
 	rpcUrl       string
 )
 
@@ -66,13 +67,23 @@ var diamondCutCmd = &cobra.Command{
 			cuts = append(cuts, cut)
 		}
 
+		var initAddr common.Address
+		var initCalldata []byte
+		var err error
+		if initData != "" {
+			initAddr, initCalldata, err = parseInitData(initData)
+			if err != nil {
+				fmt.Println(components.ErrorBox(err.Error()))
+			}
+		}
+
 		if dumpCallData {
 			// Display Calldata if set
-			displayCalldata(cuts)
+			displayCalldata(cuts, initAddr, initCalldata)
 			return
 		} else {
 			// Otherwise execute the TX
-			executeCut(cuts)
+			executeCut(cuts, initAddr, initCalldata)
 		}
 	},
 }
@@ -86,6 +97,7 @@ func init() {
 	diamondCutCmd.Flags().StringVarP(&privateKey, "private-key", "p", "", "The private key to use to sign the transaction")
 	diamondCutCmd.Flags().BoolVar(&dumpCallData, "calldata", false, "Dump the call data for the diamond cut")
 	diamondCutCmd.Flags().StringArrayVar(&rawCuts, "cut", []string{}, "A list of diamond cuts.\ne.g. --cut 'add|<FACET_ADDRESS>|0x...,0x...' --cut 'remove|<ZERO_ADDRESS>|0x...0x...'")
+	diamondCutCmd.Flags().StringVar(&initData, "init", "", "Address + calldata for initialization\ne.g. --init '<INIT_ADDRESS>|<CALLDATA>'")
 	diamondCutCmd.MarkFlagsOneRequired("private-key", "calldata")
 	diamondCutCmd.MarkFlagsMutuallyExclusive("private-key", "calldata")
 	diamondCutCmd.MarkFlagsMutuallyExclusive("network", "rpc-url")
@@ -142,10 +154,23 @@ func parseDiamondCut(rawCut string) (diamondCut.IDiamondFacetCut, error) {
 	}, nil
 }
 
+func parseInitData(rawInit string) (common.Address, []byte, error) {
+	parts := strings.Split(rawInit, "|")
+	if len(parts) != 2 {
+		return common.Address{}, []byte{}, fmt.Errorf("invalid init data: %s", rawInit)
+	}
+	address := common.HexToAddress(parts[0])
+	calldata, err := hex.DecodeString(strings.TrimPrefix(parts[1], "0x"))
+	if err != nil {
+		return common.Address{}, []byte{}, fmt.Errorf("invalid calldata: %s", parts[1])
+	}
+	return address, calldata, nil
+}
+
 // displayCalldata
 // @param cuts - The cuts to display the calldata for
-func displayCalldata(cuts []diamondCut.IDiamondFacetCut) {
-	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cuts, common.Address{}, []byte{})
+func displayCalldata(cuts []diamondCut.IDiamondFacetCut, initAddr common.Address, initCalldata []byte) {
+	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cuts, initAddr, initCalldata)
 	if err != nil {
 		fmt.Println(components.ErrorBox(err.Error()))
 		return
@@ -155,7 +180,7 @@ func displayCalldata(cuts []diamondCut.IDiamondFacetCut) {
 
 // executeCut
 // @param cuts - The cuts to execute
-func executeCut(cuts []diamondCut.IDiamondFacetCut) {
+func executeCut(cuts []diamondCut.IDiamondFacetCut, initAddr common.Address, initCalldata []byte) {
 	var clientRpcUrl string
 	var chainId *big.Int
 
@@ -217,7 +242,7 @@ func executeCut(cuts []diamondCut.IDiamondFacetCut) {
 		return
 	}
 
-	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cuts, common.Address{}, []byte{})
+	calldata, err := utils.GenerateCallDataFromAbi(diamondCut.DiamondCutMetaData, "diamondCut", cuts, initAddr, initCalldata)
 	if err != nil {
 		fmt.Println(components.ErrorBox(err.Error()))
 		return

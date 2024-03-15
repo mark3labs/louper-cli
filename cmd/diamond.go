@@ -38,7 +38,7 @@ import (
 // diamondCmd represents the diamond command
 var diamondCmd = &cobra.Command{
 	Use:   "diamond",
-	Short: "Get detailed information about a dimaond contract",
+	Short: "Get detailed information about a diamond contract",
 	Run: func(_ *cobra.Command, _ []string) {
 		var err error
 		var diamond types.Diamond
