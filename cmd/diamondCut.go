@@ -101,7 +101,7 @@ func init() {
 	diamondCutCmd.MarkFlagsOneRequired("private-key", "calldata")
 	diamondCutCmd.MarkFlagsMutuallyExclusive("private-key", "calldata")
 	diamondCutCmd.MarkFlagsMutuallyExclusive("network", "rpc-url")
-	diamondCutCmd.MarkFlagRequired("address")
+	diamondCutCmd.MarkFlagsOneRequired("address", "calldata")
 }
 
 // parseDiamondCut
