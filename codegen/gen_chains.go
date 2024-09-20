@@ -52,6 +52,14 @@ var RPCUrls = map[string]string{
 		log.Fatal(err)
 	}
 
+	chains = filterKeys(
+		chains,
+		"zksync",
+		"zksyncSepoliaTestnet",
+		"klaytn",
+		"klaytnBaobab",
+	)
+
 	// assign a value to the placeholder and write to file
 	err = t.Execute(f, chains)
 	if err != nil {
@@ -60,4 +68,14 @@ var RPCUrls = map[string]string{
 	}
 
 	f.Close()
+}
+
+func filterKeys(
+	m map[string]types.Chain,
+	keys ...string,
+) map[string]types.Chain {
+	for _, key := range keys {
+		delete(m, key)
+	}
+	return m
 }
