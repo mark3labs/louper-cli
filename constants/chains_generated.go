@@ -915,8 +915,6 @@ var RPCUrls = map[string]string{
 	"bscTestnet":               "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
 	"bsquared":                 "https://rpc.bsquared.network",
 	"bsquaredTestnet":          "https://testnet-rpc.bsquared.network",
-	"btr":                      "https://rpc.bitlayer.org",
-	"btrTestnet":               "https://testnet-rpc.bitlayer.org",
 	"bxn":                      "https://mainnet.blackfort.network/rpc",
 	"bxnTestnet":               "https://testnet.blackfort.network/rpc",
 	"cannon":                   "http://127.0.0.1:8545",
